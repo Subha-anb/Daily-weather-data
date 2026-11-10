@@ -1,0 +1,174 @@
+{
+  "name": "GE06-weather data",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 7
+            }
+          ]
+        }
+      },
+      "id": "faca67eb-f52e-49fb-8151-a3acc06e27d9",
+      "name": "Every Morning",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "within-range",
+              "leftValue": "={{ $now.toISO() }}",
+              "rightValue": "2026-12-31T23:59:59",
+              "operator": {
+                "type": "dateTime",
+                "operation": "beforeOrEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "8feef4f1-ecd4-477d-82f6-7ca7dce4201a",
+      "name": "Before 1-Oct-2026?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.open-meteo.com/v1/forecast",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "latitude",
+              "value": "37.9838"
+            },
+            {
+              "name": "longitude",
+              "value": "23.7275"
+            },
+            {
+              "name": "current",
+              "value": "temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m"
+            },
+            {
+              "name": "daily",
+              "value": "temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,weather_code"
+            },
+            {
+              "name": "timezone",
+              "value": "Europe/Athens"
+            },
+            {
+              "name": "forecast_days",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a868752d-1e35-4b54-89f1-9619bdc55161",
+      "name": "Fetch Athens Weather",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        448,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "subhashini.anbazhagan@gmail.com",
+        "subject": "=Athens Weather — {{ $now.toFormat(\"dd LLL yyyy\") }}",
+        "message": "=<h2>Athens Weather Summary</h2><p><strong>Date:</strong> {{ $json.daily.time[0] }}</p><h3>Right now</h3><ul><li>Temperature: {{ $json.current.temperature_2m }}°C</li><li>Humidity: {{ $json.current.relative_humidity_2m }}%</li><li>Wind: {{ $json.current.wind_speed_10m }} km/h</li></ul><h3>Today’s forecast</h3><ul><li>High: {{ $json.daily.temperature_2m_max[0] }}°C</li><li>Low: {{ $json.daily.temperature_2m_min[0] }}°C</li><li>Precipitation: {{ $json.daily.precipitation_sum[0] }} mm (chance {{ $json.daily.precipitation_probability_max[0] }}%)</li></ul>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "cac90122-5c49-41b9-ac30-4ed6170ce78f",
+      "name": "Email Weather Summary",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        672,
+        0
+      ],
+      "webhookId": "6e054e03-ab1b-44c4-aea5-01d5e1a65d87",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "gBvovZB886Gv8NKh",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Every Morning": {
+      "main": [
+        [
+          {
+            "node": "Before 1-Oct-2026?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Before 1-Oct-2026?": {
+      "main": [
+        [
+          {
+            "node": "Fetch Athens Weather",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Athens Weather": {
+      "main": [
+        [
+          {
+            "node": "Email Weather Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "0f40f93b-5b5c-4a16-ba48-d9c32be7d800",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ba24e5def98d93bfce9a27c04c08e11b4a7ae13a057d1a156fc63c6333dc8556"
+  },
+  "nodeGroups": [],
+  "id": "oc7NOwtehpkiHmpE",
+  "tags": []
+}
